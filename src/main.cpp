@@ -3,17 +3,22 @@
 #include <Wire.h>
 
 #define SENSOR_NUM 16
+#define RC 0.5
+
 // #define LONG_RANGE
 #define HIGH_SPEED
 
 const int XSHUT_GPIO_ARRAY[SENSOR_NUM] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
+
 VL53L0X tofSensor[SENSOR_NUM];
 
+uint16_t value[SENSOR_NUM], rc_value[SENSOR_NUM];
+
 void setup() {
-      Serial.begin(9600);
+      Serial.begin(38400);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
       Wire.begin();
 
-      delay(1000);   // 起動直後、I2Cが反応できるようになるまで待つ必要有り？！
+      delay(500);   // 起動直後、I2Cが反応できるようになるまで待つ必要有り？！
 
       // 接続されているすべてのVL53L0Xを停止
       for (int i = 0; i < SENSOR_NUM; i++) {
@@ -70,26 +75,24 @@ void setup() {
             // increase laser pulse periods (defaults are 14 and 10 PCLKs)
             tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
             tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
-#endif
-#if defined HIGH_SPEED
+#elif defined HIGH_SPEED
             // reduce timing budget to 20 ms (default is about 33 ms)
             tofSensor[i].setMeasurementTimingBudget(20000);
-#elif defined HIGH_ACCURACY
-            // increase timing budget to 200 ms
-            tofSensor[i].setMeasurementTimingBudget(200000);
 #endif
       }
 }
 
 void loop() {
-      for (int i = 0; i < SENSOR_NUM; i++) {
-            Serial.print("  ");
-            Serial.print(i);
-            Serial.print(": ");
-            Serial.print(tofSensor[i].readRangeSingleMillimeters());
-            if (tofSensor[i].timeoutOccurred()) {
-                  Serial.print(" TIMEOUT");
-            }
+      for (uint8_t i = 0; i < SENSOR_NUM; i++) {
+            value[i] = tofSensor[i].readRangeSingleMillimeters();
+            if (value[i] > 800) value[i] = 800;
+            value[i] *= 0.3;
+
+            rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
       }
-      Serial.println();
+
+      Serial.write(255);
+      for (uint8_t i = 0; i < SENSOR_NUM; i++) {
+            Serial.write(rc_value[i]);
+      }
 }
