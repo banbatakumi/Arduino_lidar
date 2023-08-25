@@ -3,7 +3,7 @@
 #include <Wire.h>
 
 #define SENSOR_NUM 16
-#define RC 0.5
+#define RC 0.1
 
 // #define LONG_RANGE
 #define HIGH_SPEED
@@ -86,7 +86,7 @@ void loop() {
       for (uint8_t i = 0; i < SENSOR_NUM; i++) {
             value[i] = tofSensor[i].readRangeSingleMillimeters();
             if (value[i] > 800) value[i] = 800;
-            value[i] *= 0.3;
+            value[i] *= 0.25;
 
             rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
       }
@@ -95,4 +95,5 @@ void loop() {
       for (uint8_t i = 0; i < SENSOR_NUM; i++) {
             Serial.write(rc_value[i]);
       }
+      Serial.flush();
 }
