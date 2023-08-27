@@ -3,7 +3,7 @@
 #include <Wire.h>
 
 #define SENSOR_NUM 16
-#define RC 0.1
+#define RC 0
 
 // #define LONG_RANGE
 #define HIGH_SPEED
@@ -24,23 +24,23 @@ void setup() {
       // 接続されているすべてのVL53L0Xを停止
       for (int i = 0; i < SENSOR_NUM; i++) {
             pinMode(XSHUT_GPIO_ARRAY[i], OUTPUT);
-            delay(50);
+            delay(10);
             digitalWrite(XSHUT_GPIO_ARRAY[i], LOW);
-            delay(50);
+            delay(10);
       }
 
       // 接続されているすべてのVL53L0Xを1つずつ起動して初期化
       for (int i = 0; i < SENSOR_NUM; i++) {
             digitalWrite(XSHUT_GPIO_ARRAY[i], HIGH);
-            delay(100);   // default: 500
+            delay(10);
 
             bool ret = false;
             while (ret == false) {
-                  delay(100);
+                  delay(10);
                   ret = tofSensor[i].init();
                   if (ret == false) digitalWrite(XSHUT_GPIO_ARRAY[i], HIGH);
             }
-            tofSensor[i].setTimeout(100);
+            tofSensor[i].setTimeout(100);   // default: 500
             tofSensor[i].setAddress((uint8_t)20 + (i * 2));
             tofSensor[i].setMeasurementTimingBudget(20000);
       }
