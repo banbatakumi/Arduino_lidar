@@ -15,7 +15,7 @@ VL53L0X tofSensor[SENSOR_NUM];
 uint16_t value[SENSOR_NUM], rc_value[SENSOR_NUM];
 
 void setup() {
-      Serial.begin(38400);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
+      Serial.begin(9600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
       Wire.begin();
       Wire.setClock(400000);
 
@@ -42,12 +42,7 @@ void setup() {
             }
             tofSensor[i].setTimeout(100);
             tofSensor[i].setAddress((uint8_t)20 + (i * 2));
-/*
-            tofSensor[i].setSignalRateLimit(0.1);
-            tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
-            tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);*/
-
-            //tofSensor[i].setMeasurementTimingBudget(20000);
+            tofSensor[i].setMeasurementTimingBudget(20000);
       }
 }
 
@@ -60,9 +55,8 @@ void loop() {
             rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
       }
 
-      Serial.write(255);
+      Serial.write('H');
       for (uint8_t i = 0; i < SENSOR_NUM; i++) {
             Serial.write(rc_value[i]);
       }
-      //Serial.flush();
 }
