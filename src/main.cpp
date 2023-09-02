@@ -15,7 +15,7 @@ VL53L0X tofSensor[SENSOR_NUM];
 uint16_t value[SENSOR_NUM], rc_value[SENSOR_NUM];
 
 void setup() {
-      Serial.begin(57600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
+      Serial.begin(38400);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
       Wire.begin();
       Wire.setClock(400000);
 
