@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include <VL53L0X.h>
 #include <Wire.h>
@@ -12,7 +13,10 @@ const int XSHUT_GPIO_ARRAY[SENSOR_NUM] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 
 
 VL53L0X tofSensor[SENSOR_NUM];
 
-uint16_t value[SENSOR_NUM], rc_value[SENSOR_NUM];
+uint16_t value[SENSOR_NUM];
+uint16_t rc_value[SENSOR_NUM];
+
+uint8_t read_num = 8;
 
 void setup() {
       Serial.begin(9600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
@@ -43,16 +47,44 @@ void setup() {
             tofSensor[i].setTimeout(100);   // default: 500
             tofSensor[i].setAddress((uint8_t)20 + (i * 2));
             tofSensor[i].setMeasurementTimingBudget(20000);
+            tofSensor[i].setSignalRateLimit(0.1);
+            tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
+            tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
       }
 }
 
 void loop() {
-      for (uint8_t i = 0; i < SENSOR_NUM; i++) {
-            value[i] = tofSensor[i].readRangeSingleMillimeters();
-            if (value[i] > 800) value[i] = 800;
-            value[i] *= 0.25;
+      if (Serial.available()) {
+            read_num = Serial.read();
+      }
 
-            rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
+      switch (read_num) {
+            case 4:
+                  for (uint8_t i = 0; i < SENSOR_NUM; i += 4) {
+                        value[i] = tofSensor[i].readRangeSingleMillimeters();
+                        if (value[i] > 800) value[i] = 800;
+                        value[i] *= 0.25;
+
+                        rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
+                  }
+
+            case 8:
+                  for (uint8_t i = 0; i < SENSOR_NUM; i += 2) {
+                        value[i] = tofSensor[i].readRangeSingleMillimeters();
+                        if (value[i] > 800) value[i] = 800;
+                        value[i] *= 0.25;
+
+                        rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
+                  }
+
+            case 16:
+                  for (uint8_t i = 0; i < SENSOR_NUM; i++) {
+                        value[i] = tofSensor[i].readRangeSingleMillimeters();
+                        if (value[i] > 800) value[i] = 800;
+                        value[i] *= 0.25;
+
+                        rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
+                  }
       }
 
       Serial.write('H');
