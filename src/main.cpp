@@ -17,7 +17,7 @@ uint16_t rc_value[SENSOR_NUM];
 uint8_t read_num = 16;
 
 void setup() {
-      Serial.begin(19200);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
+      Serial.begin(57600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
       Wire.begin();
       Wire.setClock(400000);
 
@@ -70,4 +70,5 @@ void loop() {
             Serial.write(rc_value[i]);
       }
       Serial.write(0xAA);
+      Serial.flush();
 }
