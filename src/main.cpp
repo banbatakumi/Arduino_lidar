@@ -4,13 +4,15 @@
 #include <Wire.h>
 
 #define SENSOR_NUM 16
-#define MAX_VAL 900
+#define RC 0.5
+#define MAX_VAL 1000
 
 const int XSHUT_GPIO_ARRAY[SENSOR_NUM] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
 
 VL53L0X tofSensor[SENSOR_NUM];
 
 uint16_t value[SENSOR_NUM];
+uint16_t rc_value[SENSOR_NUM];
 
 uint8_t read_num = 16;
 
@@ -42,7 +44,12 @@ void setup() {
             }
             tofSensor[i].setTimeout(100);   // default: 500
             tofSensor[i].setAddress((uint8_t)20 + (i * 2));
-            tofSensor[i].setMeasurementTimingBudget(20000);
+
+            tofSensor[i].setSignalRateLimit(0.1);
+            tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
+            tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
+
+            tofSensor[i].startContinuous();
       }
 }
 
@@ -56,14 +63,16 @@ void loop() {
       }
 
       for (uint8_t i = 0; i < SENSOR_NUM; i += (16 / read_num)) {
-            value[i] = tofSensor[i].readRangeSingleMillimeters();
+            value[i] = tofSensor[i].readRangeContinuousMillimeters();
             if (value[i] > MAX_VAL) value[i] = MAX_VAL;
             value[i] *= 200.00 / MAX_VAL;
+
+            rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
       }
 
       Serial.write(0xFF);
       for (uint8_t i = 0; i < SENSOR_NUM; i++) {
-            Serial.write(value[i]);
+            Serial.write(rc_value[i]);
       }
       Serial.write(0xAA);
       Serial.flush();
