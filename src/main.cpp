@@ -4,7 +4,6 @@
 #include <Wire.h>
 
 #define SENSOR_NUM 16
-#define RC 0
 #define MAX_VAL 900
 
 const int XSHUT_GPIO_ARRAY[SENSOR_NUM] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
@@ -12,7 +11,6 @@ const int XSHUT_GPIO_ARRAY[SENSOR_NUM] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 
 VL53L0X tofSensor[SENSOR_NUM];
 
 uint16_t value[SENSOR_NUM];
-uint16_t rc_value[SENSOR_NUM];
 
 uint8_t read_num = 16;
 
@@ -54,20 +52,18 @@ void loop() {
       }
 
       for (uint8_t i = 0; i < SENSOR_NUM; i++) {
-            rc_value[i] = 200;
+            value[i] = 200;
       }
 
       for (uint8_t i = 0; i < SENSOR_NUM; i += (16 / read_num)) {
             value[i] = tofSensor[i].readRangeSingleMillimeters();
             if (value[i] > MAX_VAL) value[i] = MAX_VAL;
             value[i] *= 200.00 / MAX_VAL;
-
-            rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
       }
 
       Serial.write(0xFF);
       for (uint8_t i = 0; i < SENSOR_NUM; i++) {
-            Serial.write(rc_value[i]);
+            Serial.write(value[i]);
       }
       Serial.write(0xAA);
       Serial.flush();
