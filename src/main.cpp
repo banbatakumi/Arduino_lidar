@@ -3,18 +3,17 @@
 #include <VL53L0X.h>
 #include <Wire.h>
 
-#define SENSOR_NUM 16
+#define SENSOR_QTY 16
 #define RC 0.5
 #define MAX_VAL 1000
 
-const int XSHUT_GPIO_ARRAY[SENSOR_NUM] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
+const int XSHUT_GPIO_ARRAY[SENSOR_QTY] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
 
-VL53L0X tofSensor[SENSOR_NUM];
+VL53L0X tofSensor[SENSOR_QTY];
 
-uint16_t value[SENSOR_NUM];
-uint16_t rc_value[SENSOR_NUM];
-
-uint8_t read_num = 16;
+uint16_t val[SENSOR_QTY];
+uint16_t rc_val[SENSOR_QTY];
+uint16_t offset[SENSOR_QTY] = {1, 2, 5, 3, 3, 2, 3, 5, 6, 3, 4, 6, 1, 0, 5, 14};
 
 void setup() {
       Serial.begin(57600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
@@ -24,7 +23,7 @@ void setup() {
       delay(100);   // 起動直後、I2Cが反応できるようになるまで待つ必要有り？！
 
       // 接続されているすべてのVL53L0Xを停止
-      for (int i = 0; i < SENSOR_NUM; i++) {
+      for (int i = 0; i < SENSOR_QTY; i++) {
             pinMode(XSHUT_GPIO_ARRAY[i], OUTPUT);
             delay(10);
             digitalWrite(XSHUT_GPIO_ARRAY[i], LOW);
@@ -32,7 +31,7 @@ void setup() {
       }
 
       // 接続されているすべてのVL53L0Xを1つずつ起動して初期化
-      for (int i = 0; i < SENSOR_NUM; i++) {
+      for (int i = 0; i < SENSOR_QTY; i++) {
             digitalWrite(XSHUT_GPIO_ARRAY[i], HIGH);
             delay(10);
 
@@ -45,6 +44,7 @@ void setup() {
             tofSensor[i].setTimeout(100);   // default: 500
             tofSensor[i].setAddress((uint8_t)20 + (i * 2));
 
+            // 測定距離を長くする
             tofSensor[i].setSignalRateLimit(0.1);
             tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
             tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
@@ -54,26 +54,28 @@ void setup() {
 }
 
 void loop() {
-      if (Serial.available() > 0) {
-            read_num = Serial.read();
-      }
+      for (uint8_t i = 0; i < SENSOR_QTY; i++) {
+            val[i] = tofSensor[i].readRangeContinuousMillimeters();
+            if (val[i] > MAX_VAL) val[i] = MAX_VAL;
+            val[i] *= 200.00 / MAX_VAL;
+            val[i] -= offset[i];
 
-      for (uint8_t i = 0; i < SENSOR_NUM; i++) {
-            value[i] = 200;
-      }
-
-      for (uint8_t i = 0; i < SENSOR_NUM; i += (16 / read_num)) {
-            value[i] = tofSensor[i].readRangeContinuousMillimeters();
-            if (value[i] > MAX_VAL) value[i] = MAX_VAL;
-            value[i] *= 200.00 / MAX_VAL;
-
-            rc_value[i] = rc_value[i] * RC + value[i] * (1 - RC);
+            rc_val[i] = rc_val[i] * RC + val[i] * (1 - RC);
       }
 
       Serial.write(0xFF);
-      for (uint8_t i = 0; i < SENSOR_NUM; i++) {
-            Serial.write(rc_value[i]);
+      for (uint8_t i = 0; i < SENSOR_QTY; i++) {
+            Serial.write(rc_val[i]);
       }
       Serial.write(0xAA);
       Serial.flush();
+      
+      /*
+      for (uint8_t i = 0; i < SENSOR_QTY; i++) {
+            Serial.print(" ");
+            Serial.print(i);
+            Serial.print(":");
+            Serial.print(rc_val[i]);
+      }
+      Serial.println();*/
 }
