@@ -5,7 +5,7 @@
 
 #define SENSOR_QTY 16
 #define RC 0.8
-#define MAX_VAL 1200
+#define MAX_VAL 1100
 
 const int XSHUT_GPIO_ARRAY[SENSOR_QTY] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
 
