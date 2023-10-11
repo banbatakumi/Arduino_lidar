@@ -4,8 +4,8 @@
 #include <Wire.h>
 
 #define SENSOR_QTY 16
-#define RC 0.8
-#define MAX_VAL 1100
+#define RC 0.75
+#define MAX_VAL 1200
 
 const int XSHUT_GPIO_ARRAY[SENSOR_QTY] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
 
@@ -41,7 +41,7 @@ void setup() {
                   ret = tofSensor[i].init();
                   if (ret == false) digitalWrite(XSHUT_GPIO_ARRAY[i], HIGH);
             }
-            tofSensor[i].setTimeout(100);   // default: 500
+            tofSensor[i].setTimeout(500);   // default: 500
             tofSensor[i].setAddress((uint8_t)20 + (i * 2));
 
             // 測定距離を長くする
@@ -69,7 +69,7 @@ void loop() {
       }
       Serial.write(0xAA);
       Serial.flush();
-      
+
       /*
       for (uint8_t i = 0; i < SENSOR_QTY; i++) {
             Serial.print(" ");
