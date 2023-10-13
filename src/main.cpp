@@ -5,7 +5,7 @@
 
 #define SENSOR_QTY 16
 #define RC 0.75
-#define MAX_VAL 1200
+#define MAX_VAL 2000
 
 const int XSHUT_GPIO_ARRAY[SENSOR_QTY] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
 
@@ -16,7 +16,7 @@ uint16_t rc_val[SENSOR_QTY];
 uint16_t offset[SENSOR_QTY] = {1, 2, 5, 3, 3, 2, 3, 5, 6, 3, 4, 6, 1, 0, 5, 14};
 
 void setup() {
-      Serial.begin(57600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
+      Serial.begin(115200);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
       Wire.begin();
       Wire.setClock(400000);
 
@@ -44,7 +44,6 @@ void setup() {
             tofSensor[i].setTimeout(500);   // default: 500
             tofSensor[i].setAddress((uint8_t)20 + (i * 2));
 
-            // 測定距離を長くする
             tofSensor[i].setSignalRateLimit(0.1);
             tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
             tofSensor[i].setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
@@ -57,8 +56,7 @@ void loop() {
       for (uint8_t i = 0; i < SENSOR_QTY; i++) {
             val[i] = tofSensor[i].readRangeContinuousMillimeters();
             if (val[i] > MAX_VAL) val[i] = MAX_VAL;
-            val[i] *= 200.00 / MAX_VAL;
-            val[i] -= offset[i];
+            val[i] *= 0.1; // cmに変換
 
             rc_val[i] = rc_val[i] * RC + val[i] * (1 - RC);
       }
