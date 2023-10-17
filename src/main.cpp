@@ -16,9 +16,11 @@ uint16_t rc_val[SENSOR_QTY];
 uint16_t offset[SENSOR_QTY] = {1, 2, 5, 3, 3, 2, 3, 5, 6, 3, 4, 6, 1, 0, 5, 14};
 
 void setup() {
-      Serial.begin(115200);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
+      Serial.begin(57600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
       Wire.begin();
-      Wire.setClock(400000);
+      pinMode(SDA, INPUT);
+      pinMode(SCL, INPUT);
+      Wire.setClock(100000);
 
       delay(100);   // 起動直後、I2Cが反応できるようになるまで待つ必要有り？！
 
@@ -56,11 +58,10 @@ void loop() {
       for (uint8_t i = 0; i < SENSOR_QTY; i++) {
             val[i] = tofSensor[i].readRangeContinuousMillimeters();
             if (val[i] > MAX_VAL) val[i] = MAX_VAL;
-            val[i] *= 0.1; // cmに変換
+            val[i] *= 0.1;   // cmに変換
 
             rc_val[i] = rc_val[i] * RC + val[i] * (1 - RC);
       }
-
       Serial.write(0xFF);
       for (uint8_t i = 0; i < SENSOR_QTY; i++) {
             Serial.write(rc_val[i]);
@@ -69,11 +70,11 @@ void loop() {
       Serial.flush();
 
       /*
-      for (uint8_t i = 0; i < SENSOR_QTY; i++) {
-            Serial.print(" ");
-            Serial.print(i);
-            Serial.print(":");
-            Serial.print(rc_val[i]);
-      }
-      Serial.println();*/
+                  for (uint8_t i = 0; i < SENSOR_QTY; i++) {
+                        Serial.print(" ");
+                        Serial.print(i);
+                        Serial.print(":");
+                        Serial.print(rc_val[i]);
+                  }
+                  Serial.println();*/
 }
