@@ -66,7 +66,7 @@ void tofInit() {
 void setup() {
       Serial.begin(57600);   // 通信速度: 9600, 14400, 19200, 28800, 38400, 57600, 115200
       Wire.begin();
-      Wire.setClock(100000);
+      Wire.setClock(50000);
       pinMode(SDA, INPUT);
       pinMode(SCL, INPUT);
 
@@ -83,7 +83,7 @@ void loop() {
             rc_val[i] = rc_val[i] * RC + val[i] * (1 - RC);
       }
 
-      if (out_range_qty > 8) resetFunc();
+      if (out_range_qty > 5) resetFunc();
 
       // UART送信
       Serial.write(0xFF);
