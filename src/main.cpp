@@ -8,7 +8,7 @@
 #define MAX_VAL 1000
 #define OUT_RANGE_VAL 8000
 #define OUT_RANGE_RESET_NUM 100
-#define OUT_RAMGE_SENSOR_QTY 12
+#define OUT_RAMGE_SENSOR_QTY 8
 
 // #define LONG_RANGE
 // #define HIGH_SPEED
@@ -99,7 +99,7 @@ void loop() {
                   out_range_cnt = 0;
             }
 
-            if (out_range_cnt > OUT_RANGE_RESET_NUM) resetFunc();   // エラーを起こしたセンサが一定数を超えたらソフトウェアリセット
+            if (out_range_cnt > OUT_RANGE_RESET_NUM) tofInit();   // エラーを起こしたセンサが一定数を超えたらソフトウェアリセット
 
             // UART送信
             which_data_send = 1 - which_data_send;
