@@ -1,14 +1,13 @@
-
 #include <Arduino.h>
 #include <VL53L0X.h>
 #include <Wire.h>
 
-#define SENSOR_QTY 16
+#define SENSOR_QTY 7
 #define RC 0.5
 #define MAX_VAL 1000
 #define OUT_RANGE_VAL 8000
-#define OUT_RANGE_RESET_NUM 100
-#define OUT_RAMGE_SENSOR_QTY 8
+#define OUT_RANGE_RESET_NUM 200
+#define OUT_RAMGE_SENSOR_QTY 12
 
 // #define LONG_RANGE
 // #define HIGH_SPEED
@@ -16,15 +15,14 @@
 
 VL53L0X tof[SENSOR_QTY];
 
-const int XSHUT_GPIO_ARRAY[SENSOR_QTY] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
+// const int XSHUT_GPIO_ARRAY[SENSOR_QTY] = {2, 12, 11, 17, 16, 15, 14, 10, 13, 9, 8, 7, 6, 5, 4, 3};
+const int XSHUT_GPIO_ARRAY[SENSOR_QTY] = {5, 4, 3, 2, 12, 11, 17};
 const char FIRST_ADDRESS = 0x30;
 
 uint16_t val[SENSOR_QTY];
 uint8_t rc_val[SENSOR_QTY];
 uint8_t out_range_qty;
 uint8_t out_range_cnt;
-
-bool which_data_send;
 
 void (*resetFunc)(void) = 0;
 
@@ -78,8 +76,6 @@ void setup() {
       pinMode(SCL, INPUT);
 
       tofInit();
-
-      TIMSK0 = 0;   // Timer0の停止
 }
 
 void loop() {
@@ -91,6 +87,8 @@ void loop() {
                   if (val[i] > MAX_VAL) val[i] = MAX_VAL;   // レンジオーバーの場合最大値に戻す
                   val[i] *= 0.2;   // cmに変換
                   rc_val[i] = rc_val[i] * RC + val[i] * (1 - RC);
+
+                  delay(5);
             }
 
             if (out_range_qty > OUT_RAMGE_SENSOR_QTY) {
@@ -99,32 +97,30 @@ void loop() {
                   out_range_cnt = 0;
             }
 
-            if (out_range_cnt > OUT_RANGE_RESET_NUM) tofInit();   // エラーを起こしたセンサが一定数を超えたらソフトウェアリセット
+            //if (out_range_cnt > OUT_RANGE_RESET_NUM) resetFunc();   // エラーを起こしたセンサが一定数を超えたらソフトウェアリセット
 
             // UART送信
-            which_data_send = 1 - which_data_send;
-            if (which_data_send == 0) {
-                  Serial.write(0xAF);
-                  for (uint8_t i = 0; i < 8; i++) {
-                        Serial.write(rc_val[i * 2]);
-                  }
-            } else {
-                  Serial.write(0xFF);
-                  for (uint8_t i = 0; i < 8; i++) {
-                        Serial.write(rc_val[i * 2 + 1]);
-                  }
-            }
+            Serial.write(0xFF);
+            Serial.write(rc_val[0]);
+            Serial.write(rc_val[1]);
+            Serial.write(rc_val[2]);
+            Serial.write(rc_val[3]);
+            Serial.write(rc_val[4]);
+            Serial.write(rc_val[5]);
+            Serial.write(rc_val[6]);
             Serial.write(0xAA);
             Serial.flush();
-
+            //Serial.println(tof[15].readRangeContinuousMillimeters());
             /*
+
+            
             for (uint8_t i = 0; i < SENSOR_QTY; i++) {
                   Serial.print(" ");
                   Serial.print(i);
                   Serial.print(":");
                   Serial.print(tof[i].readRangeContinuousMillimeters());
             }
-            Serial.println();
-            */
+            Serial.println();*/
+            
       }
 }
